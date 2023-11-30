@@ -7,6 +7,7 @@ import httpx
 import asyncio
 from selectolax.parser import HTMLParser
 import configparser
+import time
 
 @dataclass
 class Property:
@@ -38,14 +39,17 @@ async def get_location_identifier_from_input(location:str):
             target_location_identifier = json_data["typeAheadLocations"][0]["locationIdentifier"]
 
             return target_location_identifier
-        except httpx.HTTPError as exc:
-            print(f"HTTP error occurred: {exc}")
+        except httpx.HTTPError:
+            print(f"HTTP error occurred when getting location identifier from input {location}")
 
             return None
 
 async def get_crime_data_from_coordinates(latitude:str, longitude:str):
     crime_data_url = f"https://data.police.uk/api/crimes-street/all-crime?lat={latitude}&lng={longitude}"
     
+    # add this to avoid exceeding the limit of the crime api
+    time.sleep(0.5)
+
     async with httpx.AsyncClient() as client:
         try:
                 response = await client.get(crime_data_url)
@@ -55,13 +59,14 @@ async def get_crime_data_from_coordinates(latitude:str, longitude:str):
                 json_data = response.json()
 
                 return len(json_data)
-        except httpx.HTTPError as exc:
-                print(f"HTTP error occurred: {exc}")
+        except httpx.HTTPError:
+                raise ConnectionError(f"HTTP error occurred when getting crime data from lat {latitude} and long {longitude}")
 
-                return None
+async def get_coordinates_from_address(address:str, api_key:str, location:str):
+    # avoid poor address that fails the geoapify api search 
+    modified_address = address.replace("\n","") + f" {location}"
 
-async def get_coordinates_from_address(address:str, api_key:str):
-    geoapify_url = f"https://api.geoapify.com/v1/geocode/search?text={address}&apiKey={api_key}"
+    geoapify_url = f"https://api.geoapify.com/v1/geocode/search?text={modified_address}&limit=1&filter=countrycode:gb&apiKey={api_key}"
     
     async with httpx.AsyncClient() as client:
         try:
@@ -72,12 +77,10 @@ async def get_coordinates_from_address(address:str, api_key:str):
             coordinates = {"longitude":json_result["features"][0]["properties"]["lon"], "latitude":json_result["features"][0]["properties"]["lat"]}
 
             return coordinates
-        except httpx.HTTPError as exc:
-            print(f"HTTP error occurred: {exc}")
-
-            return None
+        except httpx.HTTPError:
+            raise ConnectionError(f"HTTP error occurred when getting coordinates from {address} in {location}")
         except Exception:
-            print(f"Unexpected error: please check your API key or your credit limit on Geoapify")
+            raise ConnectionError(f"Unexpected error when getting coordinates from {address} in {location}.please check your API key or your credit limit on Geoapify")
 
 def translate_location_to_rightmove_format(location:str) -> str:
     #translate the location from london to LO/ND/ON
@@ -182,6 +185,12 @@ def is_arg_range_valid(min:int,max:int,arg: int | float):
     return False
 
 def validate_input(radius:str, min_bedroom:str | None,max_bedroom:str | None,min_price:str | None,max_price:str | None):
+    allowed_radius = [0,0.25,0.5,1,3,5,10,15,20,30,40]
+    value = float(radius)  # Convert input to float for comparison
+        
+    if value not in allowed_radius:
+        raise ValueError("Invalid radius. Please enter a valid value from 0,0.25,0.5,1,3,5,10,15,20,30 or 40")
+
     if not is_arg_range_valid(0,40, float(radius)):
         raise ValueError("Error: radius must be between 0 and 40")
     
@@ -202,7 +211,7 @@ def validate_input(radius:str, min_bedroom:str | None,max_bedroom:str | None,min
     
     if(min_price is not None and max_price is not None and int(max_price) < int(min_price)):
         raise ValueError("Error: max_price must be larger than or equal to min_price")
-
+        
 async def main():
     if(len(sys.argv) != 7):
         raise ValueError("Please enter correct parameters format: main.py <location> <search_radius> <min_bedroom> <max_bedroom> <min_price> <max_price>")
@@ -216,7 +225,7 @@ async def main():
     if GEOAPIFY_API_KEY == "":
         raise ValueError("Please add your own geoapify api key in the config.ini file")
     #extracting data from arguments
-    location = sys.argv[1]
+    location = sys.argv[1].replace("_"," ")
 
     radius = sys.argv[2]
 
@@ -230,7 +239,7 @@ async def main():
     
     validate_input(radius, min_bedroom, max_bedroom, min_price, max_price)
     #queries
-    radius_query = f"&radius={radius}" if radius != 0 else ""
+    radius_query = f"&radius={float(radius)}"
     
     min_bedroom_query = f"&minBedrooms={min_bedroom}" if min_bedroom is not None else ""
     
@@ -256,7 +265,7 @@ async def main():
             parsed_property = await parse_property_page(html)
             parsed_property["link"] = url
             
-            coordinates_of_property = await get_coordinates_from_address(parsed_property["address"], GEOAPIFY_API_KEY)
+            coordinates_of_property = await get_coordinates_from_address(parsed_property["address"], GEOAPIFY_API_KEY, location)
 
             crime_data_near_property = await get_crime_data_from_coordinates(coordinates_of_property["latitude"], coordinates_of_property["longitude"])
 
@@ -265,9 +274,10 @@ async def main():
             list_of_properties.append(parsed_property)
 
         download_path = config['PATH']['download_path']
+
         export_to_csv(location,list_of_properties, download_path)
     except Exception as ex:
-        print(f"Unexpected error occurred : {ex}")
+        print(ex)
         return
 
 if __name__ == "__main__":
