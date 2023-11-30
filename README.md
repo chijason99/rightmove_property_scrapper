@@ -9,9 +9,9 @@ Currently this only supports finding properties for renting.
 ## Clone the repository
 
 ```bash
-git clone https://github.com/chijason99/rightmove_property_scrapper.git
+git clone https://github.com/chijason99/rightmove_to_csv.git
 
-cd rightmove_property_scrapper
+cd rightmove_to_csv
 ```
 ## Set up the virtual environment
 Use the package manager [pip](https://pip.pypa.io/en/stable/) to install packages.
