@@ -87,6 +87,22 @@ By default, the csv file would be saved next to the main.py file. If you want to
 download_path = your_own_download_path
 ```
 
+## Data in the csv file
+- address	: the address of the scrapped property
+
+- pcm : the rent per month in pound
+
+- type : the type of property. Flat, Semi-Detached, etc
+
+- bedrooms : the number of bedrooms of the property
+  
+- bathrooms : the number of bathrooms of the property
+  
+- link : the rightmove link of the property in case you are interested
+  
+- crime : this is the number of crimes reported within 1 mile radius of the property address. The number is taken using the [data.police.uk](https://data.police.uk/docs/) api
+
+
 ## Contributing
 
 Pull requests are welcome. For major changes, please open an issue first
@@ -98,6 +114,9 @@ to discuss what you would like to change.
 
 2. There are many other filter on rightmove that you can use, but currently it only supports the variable I show earlier. I only pick these because those are the criteria that I care about the most, and I don't want to make the command too long.
 
+3. The map on each rightmove property is lazy loaded, therefore I cannot grab the accurate coordinates using selectolax when scrapping the web. The crime number might be a bit inaccurate as it is using the calculated latitude and longitude from Geoapify to grab the data.
+   
+4. The 1 mile radius of crime appears to be too big of a concern. I would rather focus on a smaller area to see the crime stats. I notice there is a custom area crime api in [data.police.uk](https://data.police.uk/docs/) api, which I might investigate in and try to get a more relevant crime number
 ## License
 
 [MIT](https://choosealicense.com/licenses/mit/)
