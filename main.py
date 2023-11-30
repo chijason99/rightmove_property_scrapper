@@ -6,8 +6,7 @@ import sys
 import httpx
 import asyncio
 from selectolax.parser import HTMLParser
-import os
-from dotenv import load_dotenv
+import configparser
 
 @dataclass
 class Property:
@@ -77,10 +76,13 @@ async def get_coordinates_from_address(address:str, api_key:str):
             print(f"HTTP error occurred: {exc}")
 
             return None
+        except Exception:
+            print(f"Unexpected error: please check your API key or your credit limit on Geoapify")
 
 def translate_location_to_rightmove_format(location:str) -> str:
     #translate the location from london to LO/ND/ON
-    pairs = [location[i:i+2] for i in range(0, len(location), 2)]
+    first_six_char = location[0:7].replace("-"," ").replace("_", " ")
+    pairs = [first_six_char[i:i+2] for i in range(0, len(first_six_char), 2)]
     translated_string = '/'.join(pairs)
     return translated_string.upper()
 
@@ -162,9 +164,10 @@ def get_property_type_for_property(html: HTMLParser) :
     except Exception :
         return None
 
-def export_to_csv(location,list_of_properties):
+def export_to_csv(location:str,list_of_properties, download_path:str):
     field_name = [field.name for field in fields(Property)]
-    with open(f"{location}_rightmove_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.csv", "w") as f:
+
+    with open(f"{download_path if not download_path else ''}{location}_rightmove_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.csv", "w") as f:
         writer = csv.DictWriter(f, field_name)
 
         writer.writeheader()
@@ -204,11 +207,14 @@ async def main():
     if(len(sys.argv) != 7):
         raise ValueError("Please enter correct parameters format: main.py <location> <search_radius> <min_bedroom> <max_bedroom> <min_price> <max_price>")
     
-    load_dotenv()
-    GEOAPIFY_API_KEY = os.getenv("GEOAPIFY_API_KEY")
+    #load config
+    config = configparser.ConfigParser()
+    config.read('config.ini')
 
-    if GEOAPIFY_API_KEY is None:
-        raise ValueError("Please add your geoapify api key in a .env file")
+    GEOAPIFY_API_KEY = config['API']['GEOAPIFY_API_KEY']
+
+    if GEOAPIFY_API_KEY == "":
+        raise ValueError("Please add your own geoapify api key in the config.ini file")
     #extracting data from arguments
     location = sys.argv[1]
 
@@ -258,7 +264,8 @@ async def main():
 
             list_of_properties.append(parsed_property)
 
-        export_to_csv(location,list_of_properties)
+        download_path = config['PATH']['download_path']
+        export_to_csv(location,list_of_properties, download_path)
     except Exception as ex:
         print(f"Unexpected error occurred : {ex}")
         return
