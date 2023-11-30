@@ -1,8 +1,6 @@
-# rightmove_property_scrapper
+# rightmove_to_csv
 
 The program is designed to extract property data from rightmove with some basic criteria like location, number of bedrooms and price, as well as retrieving information regarding nearby crimes within a 1-mile radius of each property's location, and save this data to a CSV file.
-
-I make this because it is kind of annoying to have to go on every listed property on Rightmove and make an excel file one by one to do some basic filtering and stuff. Do this with python automation just makes my life a bit easier.
 
 Currently this only supports finding properties for renting.
 
@@ -120,3 +118,6 @@ to discuss what you would like to change.
 ## License
 
 [MIT](https://choosealicense.com/licenses/mit/)
+
+## Legal
+From author : [chijason99](https://github.com/chijason99) The use of scrapping technology is not allowed in the [terms and conditions of rightmove](https://www.rightmove.co.uk/this-site/terms-of-use.html). This project is only built for studying purpose. Please do not use this package!
