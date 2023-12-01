@@ -70,12 +70,12 @@ python main.py <location> <radius> <min_bedroom> <max_bedroom> <min_price> <max_
 
 - min_price: a number between 100 - 40000, representing the rent per calendar month. If you don't want to specify the number of min_price, you can simply use an underscore _
 
-- max_price: a number between 100 - 40000, representing the rent per calendar month. If you don't want to specify the number of min_price, you can simply use an underscore _. Note that the number of max_price must be larger than or equal to the number of min_price if that is specified
+- max_price: a number between 100 - 40000, representing the rent per calendar month. If you don't want to specify the number of max_price, you can simply use an underscore _. Note that the number of max_price must be larger than or equal to the number of min_price if that is specified
 
-An example: search for properties in London within 1.5 mile radius, from studio to max 1 bedroom, with a maximum price of £1000 pcm
+An example: search for properties in London within 0.5 mile radius, from studio to max 1 bedroom, with a maximum price of £1000 pcm
 
 ```bash
-python main.py london 1.5 0 1 _ 1000
+python main.py london 0.5 0 1 _ 1000
 ```
 After you see the message "saved to csv", you will be able to see the csv file and you can open it with excel to do the comparison you want!
 
@@ -114,7 +114,7 @@ to discuss what you would like to change.
 
 3. The map on each rightmove property is lazy loaded, therefore I cannot grab the accurate coordinates using selectolax when scrapping the web. The crime number might be inaccurate as it is using the calculated latitude and longitude from Geoapify to grab the data.
    
-4. The crime data in the csv file are all the crimes within 1 mile radius of the property, which makes this data too ambiguious for examining the safety of the area. It would be better and more reasonable to focus on a smaller area around the property. I notice there is a custom area crime api in [data.police.uk](https://data.police.uk/docs/) api, which I might look into and try to get a more relevant crime number
+4. The crime data in the csv file are all the crimes within 1 mile radius of the property, which makes this data too ambiguious for examining the safety of the area. It would be better and more reasonable to focus on a smaller area around the property. I notice there is a custom location crime api in [data.police.uk](https://data.police.uk/docs/) api, which I might look into and try to get a more relevant crime number
 ## License
 
 [MIT](https://choosealicense.com/licenses/mit/)
