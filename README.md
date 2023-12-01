@@ -62,7 +62,7 @@ python main.py <location> <radius> <min_bedroom> <max_bedroom> <min_price> <max_
 ### Variables Contraint
 - location: a string of the place you want to search. Replace the blank space with underscore if any. For example, type in west_brom instead of west brom. You can still type in hyphen if there is any in the name, for example, stratford-upon-avon
 
-- radius: a number between 0 - 40, indicating the radius in miles that you want to search for
+- radius: must be a number from this list:[0 , 0.25 , 0.5 , 1 , 3 , 5, 10 , 15 , 20 , 30 , 40], indicating the radius in miles that you want to search for
 
 - min_bedroom: a number between 0 - 10, where 0 represents studio. If you don't want to specify the number of min_bedroom, you can simply use an underscore _
 
